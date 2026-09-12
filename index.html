@@ -1,51 +1,705 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BLACKSTREAM - Built by Ajex46</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:sans-serif}
-body{background:#0f0f0f;color:#fff}
-header{position:sticky;top:0;background:#0f0f0f;display:flex;align-items:center;justify-content:space-between;padding:10px 12px;gap:8px;border-bottom:1px solid #222;z-index:100}
-.search-wrap{flex:1;display:flex;background:#121212;border:1px solid #333;border-radius:24px;overflow:hidden}
-.search-wrap input{flex:1;background:transparent;border:none;color:#fff;padding:10px 14px;outline:none}
-.search-wrap button{background:#222;border:none;color:#fff;padding:10px 16px}
-.grid{display:grid;gap:10px;padding:12px}
-.card{background:#181818;border-radius:12px;overflow:hidden}
-.thumb{position:relative;aspect-ratio:16/9;background:#000}
-.thumb img{width:100%;height:100%;object-fit:cover}
-.info{padding:10px}
-.player-modal{position:fixed;inset:0;background:#000;z-index:200;display:none;flex-direction:column}
-.player-modal.open{display:flex}
-.video-box{width:100%;aspect-ratio:16/9;background:#000}
-.video-box iframe{width:100%;height:100%;border:none}
-</style>
-</head>
-<body>
-<header>
-<div style="font-weight:900">▶ BLACKSTREAM</div>
-<div class="search-wrap"><input id="searchInput" placeholder="Search BLACKSTREAM..."><button onclick="doSearch()">🔍</button></div>
-<div style="background:#fff;color:#000;padding:6px 12px;border-radius:20px;font-weight:700;font-size:11px">PREMIUM</div>
-</header>
-<div style="padding:14px"><h1 style="font-size:26px;font-weight:900">More Features Than YouTube.<br>Built by Ajex46</h1><p style="color:#aaa;font-size:12px;margin-top:6px">4K • Theatre • PiP • Ambient • Offline • Locked Profile</p></div>
-<div class="grid" id="grid"></div>
-<div class="player-modal" id="playerModal">
-<div style="display:flex;justify-content:space-between;padding:10px"><button onclick="closePlayer()" style="background:#333;color:#fff;border:none;width:36px;height:36px;border-radius:50%">✕</button><span>4K PREMIUM</span></div>
-<div class="video-box"><iframe id="ytFrame" allow="autoplay; fullscreen" allowfullscreen></iframe></div>
-<h2 id="vTitle" style="padding:12px"></h2>
-</div>
-<script>
-const videos=[
-{id:'kJQP7kiw5Fk',title:'Luis Fonsi - Despacito (4K)',views:'8.4B',thumb:'https://i.ytimg.com/vi/kJQP7kiw5Fk/hqdefault.jpg'},
-{id:'RgKAFK5djSk',title:'Wiz Khalifa - See You Again (4K)',views:'6.1B',thumb:'https://i.ytimg.com/vi/RgKAFK5djSk/hqdefault.jpg'},
-{id:'9bZkp7q19f0',title:'PSY - GANGNAM STYLE (4K)',views:'5.5B',thumb:'https://i.ytimg.com/vi/9bZkp7q19f0/hqdefault.jpg'},
-{id:'dQw4w9WgXcQ',title:'Avengers: Secret Wars Trailer (4K)',views:'89M',thumb:'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg'},
+# ============================================================
+# VYNORA — PREMIUM VIDEO APP
+# Flutter Android/iOS application
+# ============================================================
+
+# FILE: pubspec.yaml
+name: vynora
+description: Premium ad-free video streaming application.
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  video_player: ^2.9.2
+  cached_network_image: ^3.4.1
+  shared_preferences: ^2.3.3
+  http: ^1.2.2
+  intl: ^0.19.0
+
+flutter:
+  uses-material-design: true
+
+
+# ============================================================
+# FILE: lib/main.dart
+# ============================================================
+
+import 'dart:async';
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:video_player/video_player.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+  runApp(const VynoraApp());
+}
+
+class VynoraApp extends StatelessWidget {
+  const VynoraApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'VYNORA',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: const Color(0xFF070707),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF8B5CF6),
+          brightness: Brightness.dark,
+        ),
+        useMaterial3: true,
+        fontFamily: 'Roboto',
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF070707),
+          elevation: 0,
+        ),
+      ),
+      home: const AppShell(),
+    );
+  }
+}
+
+
+// ============================================================
+// APP CONFIG
+// ============================================================
+
+class AppConfig {
+  static const String appName = 'VYNORA';
+  static const String appTagline = 'WATCH. CREATE. BELONG.';
+
+  // Replace these with your own backend/API values.
+  static const String apiBaseUrl = 'https://YOUR-BACKEND-URL.com/api';
+
+  // Never put private server secrets inside the mobile application.
+  // Public API keys can be placed here if your provider requires one.
+  static const String publicApiKey = 'YOUR_PUBLIC_API_KEY';
+
+  static const String monthlyPrice = '\$8.00';
+  static const String yearlyPrice = '\$79.00';
+
+  static const bool adsEnabled = false;
+}
+
+
+// ============================================================
+// MODELS
+// ============================================================
+
+class VideoModel {
+  final String id;
+  final String title;
+  final String creator;
+  final String creatorAvatar;
+  final String thumbnail;
+  final String videoUrl;
+  final String description;
+  final String category;
+  final int views;
+  final String duration;
+  final DateTime published;
+  final bool verified;
+  final bool isPremium;
+  final int likes;
+
+  const VideoModel({
+    required this.id,
+    required this.title,
+    required this.creator,
+    required this.creatorAvatar,
+    required this.thumbnail,
+    required this.videoUrl,
+    required this.description,
+    required this.category,
+    required this.views,
+    required this.duration,
+    required this.published,
+    required this.verified,
+    required this.isPremium,
+    required this.likes,
+  });
+}
+
+class UserModel {
+  final String name;
+  final String email;
+  final String avatar;
+  final bool premium;
+  final int followers;
+  final int following;
+
+  const UserModel({
+    required this.name,
+    required this.email,
+    required this.avatar,
+    required this.premium,
+    required this.followers,
+    required this.following,
+  });
+
+  UserModel copyWith({
+    String? name,
+    String? email,
+    String? avatar,
+    bool? premium,
+    int? followers,
+    int? following,
+  }) {
+    return UserModel(
+      name: name ?? this.name,
+      email: email ?? this.email,
+      avatar: avatar ?? this.avatar,
+      premium: premium ?? this.premium,
+      followers: followers ?? this.followers,
+      following: following ?? this.following,
+    );
+  }
+}
+
+
+// ============================================================
+// DEMO CONTENT
+// ============================================================
+
+final List<VideoModel> demoVideos = [
+  VideoModel(
+    id: 'v001',
+    title: 'The Future of Technology Is Already Here',
+    creator: 'VYNORA Originals',
+    creatorAvatar: 'https://i.pravatar.cc/150?img=12',
+    thumbnail: 'https://picsum.photos/seed/tech/900/506',
+    videoUrl: 'https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4',
+    description:
+        'Explore the technologies changing the way we live, work and create.',
+    category: 'Technology',
+    views: 1284000,
+    duration: '12:48',
+    published: DateTime(2026, 8, 24),
+    verified: true,
+    isPremium: false,
+    likes: 94200,
+  ),
+  VideoModel(
+    id: 'v002',
+    title: 'A Cinematic Journey Through the Mountains',
+    creator: 'Arjun Visuals',
+    creatorAvatar: 'https://i.pravatar.cc/150?img=11',
+    thumbnail: 'https://picsum.photos/seed/mountains/900/506',
+    videoUrl: 'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
+    description:
+        'A cinematic travel experience through some of the most beautiful landscapes.',
+    category: 'Travel',
+    views: 842100,
+    duration: '18:21',
+    published: DateTime(2026, 8, 19),
+    verified: true,
+    isPremium: true,
+    likes: 78300,
+  ),
+  VideoModel(
+    id: 'v003',
+    title: 'How I Built My First Million-Dollar Product',
+    creator: 'Build With Ryan',
+    creatorAvatar: 'https://i.pravatar.cc/150?img=13',
+    thumbnail: 'https://picsum.photos/seed/business/900/506',
+    videoUrl: 'https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4',
+    description:
+        'A practical breakdown of product building, marketing and growth.',
+    category: 'Business',
+    views: 524900,
+    duration: '25:04',
+    published: DateTime(2026, 8, 12),
+    verified: true,
+    isPremium: false,
+    likes: 42100,
+  ),
+  VideoModel(
+    id: 'v004',
+    title: 'The Ultimate Productivity System',
+    creator: 'Focus Lab',
+    creatorAvatar: 'https://i.pravatar.cc/150?img=14',
+    thumbnail: 'https://picsum.photos/seed/productivity/900/506',
+    videoUrl: 'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
+    description:
+        'Build a simple productivity system that actually works.',
+    category: 'Education',
+    views: 391200,
+    duration: '14:37',
+    published: DateTime(2026, 7, 29),
+    verified: false,
+    isPremium: false,
+    likes: 30900,
+  ),
+  VideoModel(
+    id: 'v005',
+    title: 'Inside the World of Modern Gaming',
+    creator: 'GameSphere',
+    creatorAvatar: 'https://i.pravatar.cc/150?img=15',
+    thumbnail: 'https://picsum.photos/seed/gaming/900/506',
+    videoUrl: 'https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4',
+    description:
+        'Discover the technology and creativity behind modern games.',
+    category: 'Gaming',
+    views: 2100300,
+    duration: '21:15',
+    published: DateTime(2026, 8, 2),
+    verified: true,
+    isPremium: true,
+    likes: 183400,
+  ),
+  VideoModel(
+    id: 'v006',
+    title: 'Minimal Home Design Ideas',
+    creator: 'Studio North',
+    creatorAvatar: 'https://i.pravatar.cc/150?img=16',
+    thumbnail: 'https://picsum.photos/seed/design/900/506',
+    videoUrl: 'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
+    description:
+        'Simple, modern and affordable ideas for a beautiful home.',
+    category: 'Lifestyle',
+    views: 684000,
+    duration: '10:09',
+    published: DateTime(2026, 8, 8),
+    verified: true,
+    isPremium: false,
+    likes: 51400,
+  ),
+  VideoModel(
+    id: 'v007',
+    title: 'Learn Photography Like a Professional',
+    creator: 'Frame Theory',
+    creatorAvatar: 'https://i.pravatar.cc/150?img=17',
+    thumbnail: 'https://picsum.photos/seed/photo/900/506',
+    videoUrl: 'https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4',
+    description:
+        'Composition, lighting and camera techniques explained simply.',
+    category: 'Photography',
+    views: 294000,
+    duration: '32:40',
+    published: DateTime(2026, 7, 17),
+    verified: true,
+    isPremium: true,
+    likes: 27600,
+  ),
+  VideoModel(
+    id: 'v008',
+    title: 'Midnight Coding Session',
+    creator: 'Code Room',
+    creatorAvatar: 'https://i.pravatar.cc/150?img=18',
+    thumbnail: 'https://picsum.photos/seed/coding/900/506',
+    videoUrl: 'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
+    description:
+        'A relaxed coding session with practical development tips.',
+    category: 'Programming',
+    views: 182000,
+    duration: '46:12',
+    published: DateTime(2026, 8, 26),
+    verified: true,
+    isPremium: false,
+    likes: 15100,
+  ),
 ];
-function render(list){const g=document.getElementById('grid');g.innerHTML='';list.forEach(v=>{const c=document.createElement('div');c.className='card';c.onclick=()=>{document.getElementById('ytFrame').src='https://www.youtube.com/embed/'+v.id+'?autoplay=1';document.getElementById('vTitle').innerText=v.title;document.getElementById('playerModal').classList.add('open')};c.innerHTML=`<div class="thumb"><img src="${v.thumb}"><span style="position:absolute;bottom:6px;right:6px;background:#000;padding:2px 6px;border-radius:4px;font-size:11px">4K</span></div><div class="info"><h3 style="font-size:13px">${v.title}</h3><p style="color:#aaa;font-size:11px">${v.views} • Ajex46 ✓</p></div>`;g.appendChild(c)})}
-function closePlayer(){document.getElementById('playerModal').classList.remove('open');document.getElementById('ytFrame').src=''}
-function doSearch(){const q=document.getElementById('searchInput').value.toLowerCase();render(videos.filter(v=>v.title.toLowerCase().includes(q)))}
-render(videos);
-</script>
-</body>
-</html>
+
+
+// ============================================================
+// APP STATE
+// ============================================================
+
+class AppState extends ChangeNotifier {
+  static final AppState instance = AppState._();
+
+  AppState._();
+
+  UserModel user = const UserModel(
+    name: 'VYNORA User',
+    email: 'user@vynora.app',
+    avatar: 'https://i.pravatar.cc/150?img=68',
+    premium: false,
+    followers: 0,
+    following: 0,
+  );
+
+  final List<VideoModel> history = [];
+  final List<VideoModel> liked = [];
+  final List<VideoModel> watchLater = [];
+  final List<VideoModel> subscriptions = [];
+
+  bool isLoggedIn = true;
+
+  Future<void> load() async {
+    final prefs = await SharedPreferences.getInstance();
+    final premium = prefs.getBool('premium') ?? false;
+
+    user = user.copyWith(premium: premium);
+
+    notifyListeners();
+  }
+
+  Future<void> setPremium(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('premium', value);
+
+    user = user.copyWith(premium: value);
+    notifyListeners();
+  }
+
+  void addHistory(VideoModel video) {
+    history.removeWhere((v) => v.id == video.id);
+    history.insert(0, video);
+    if (history.length > 50) {
+      history.removeLast();
+    }
+    notifyListeners();
+  }
+
+  void toggleLike(VideoModel video) {
+    if (liked.any((v) => v.id == video.id)) {
+      liked.removeWhere((v) => v.id == video.id);
+    } else {
+      liked.add(video);
+    }
+    notifyListeners();
+  }
+
+  void toggleWatchLater(VideoModel video) {
+    if (watchLater.any((v) => v.id == video.id)) {
+      watchLater.removeWhere((v) => v.id == video.id);
+    } else {
+      watchLater.add(video);
+    }
+    notifyListeners();
+  }
+
+  bool isLiked(VideoModel video) =>
+      liked.any((v) => v.id == video.id);
+
+  bool isSaved(VideoModel video) =>
+      watchLater.any((v) => v.id == video.id);
+
+  void subscribe(VideoModel video) {
+    if (!subscriptions.any((v) => v.creator == video.creator)) {
+      subscriptions.add(video);
+    }
+    notifyListeners();
+  }
+}
+
+
+// ============================================================
+// API SERVICE
+// ============================================================
+
+class VynoraApi {
+  static Future<List<VideoModel>> search(String query) async {
+    try {
+      final uri = Uri.parse(
+        '${AppConfig.apiBaseUrl}/search?q=${Uri.encodeComponent(query)}',
+      );
+
+      final response = await http
+          .get(
+            uri,
+            headers: {
+              'Accept': 'application/json',
+            },
+          )
+          .timeout(const Duration(seconds: 8));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        if (data is List) {
+          return data
+              .map((e) => _fromJson(e as Map<String, dynamic>))
+              .toList();
+        }
+      }
+    } catch (_) {}
+
+    return demoVideos
+        .where(
+          (video) =>
+              video.title.toLowerCase().contains(query.toLowerCase()) ||
+              video.creator.toLowerCase().contains(query.toLowerCase()) ||
+              video.category.toLowerCase().contains(query.toLowerCase()),
+        )
+        .toList();
+  }
+
+  static VideoModel _fromJson(Map<String, dynamic> json) {
+    return VideoModel(
+      id: json['id'] ?? '',
+      title: json['title'] ?? '',
+      creator: json['creator'] ?? '',
+      creatorAvatar: json['creatorAvatar'] ?? '',
+      thumbnail: json['thumbnail'] ?? '',
+      videoUrl: json['videoUrl'] ?? '',
+      description: json['description'] ?? '',
+      category: json['category'] ?? 'General',
+      views: json['views'] ?? 0,
+      duration: json['duration'] ?? '00:00',
+      published: DateTime.tryParse(json['published'] ?? '') ??
+          DateTime.now(),
+      verified: json['verified'] ?? false,
+      isPremium: json['isPremium'] ?? false,
+      likes: json['likes'] ?? 0,
+    );
+  }
+}
+
+
+// ============================================================
+// APP SHELL
+// ============================================================
+
+class AppShell extends StatefulWidget {
+  const AppShell({super.key});
+
+  @override
+  State<AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends State<AppShell> {
+  int selectedIndex = 0;
+
+  final pages = const [
+    HomeScreen(),
+    ExploreScreen(),
+    CreateScreen(),
+    LibraryScreen(),
+    ProfileScreen(),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    AppState.instance.load();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: AppState.instance,
+      builder: (context, _) {
+        return Scaffold(
+          body: IndexedStack(
+            index: selectedIndex,
+            children: pages,
+          ),
+          bottomNavigationBar: NavigationBar(
+            backgroundColor: const Color(0xFF0C0C0C),
+            selectedIndex: selectedIndex,
+            onDestinationSelected: (index) {
+              setState(() => selectedIndex = index);
+            },
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.home_outlined),
+                selectedIcon: Icon(Icons.home_rounded),
+                label: 'Home',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.explore_outlined),
+                selectedIcon: Icon(Icons.explore_rounded),
+                label: 'Explore',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.add_circle_outline),
+                selectedIcon: Icon(Icons.add_circle),
+                label: 'Create',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.video_library_outlined),
+                selectedIcon: Icon(Icons.video_library),
+                label: 'Library',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.person_outline),
+                selectedIcon: Icon(Icons.person),
+                label: 'Profile',
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+
+// ============================================================
+// HOME
+// ============================================================
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  String selectedCategory = 'All';
+
+  final categories = const [
+    'All',
+    'Trending',
+    'Music',
+    'Gaming',
+    'Technology',
+    'Education',
+    'Travel',
+    'Lifestyle',
+    'Programming',
+  ];
+
+  List<VideoModel> get filteredVideos {
+    if (selectedCategory == 'All' ||
+        selectedCategory == 'Trending') {
+      return demoVideos;
+    }
+
+    return demoVideos
+        .where((v) => v.category == selectedCategory)
+        .toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            pinned: true,
+            titleSpacing: 18,
+            title: Row(
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFF8B5CF6),
+                        Color(0xFFEC4899),
+                      ],
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.play_arrow_rounded,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                const Text(
+                  'VYNORA',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.cast),
+                onPressed: () {},
+              ),
+              IconButton(
+                icon: const Icon(Icons.notifications_none),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const NotificationsScreen(),
+                    ),
+                  );
+                },
+              ),
+              Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const ProfileScreen(),
+                      ),
+                    );
+                  },
+                  child: CircleAvatar(
+                    radius: 17,
+                    backgroundImage: NetworkImage(
+                      AppState.instance.user.avatar,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const SearchScreen(),
+                    ),
+                  );
+                },
+                child: Container(
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF151515),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: const Color(0xFF272727),
+                    ),
+                  ),
+                  child: const Row(
+                    children: [
+                      SizedBox(width: 17),
+                      Icon(Icons.search, color: Colors.white70),
+                      SizedBox(width: 12),
+                      Text(
+                        'Search videos, creators, topics...',
+                        style: TextStyle(
+                          color: Colors.white54,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          SliverToBoxAdapter(
+            child: SizedBox(
+              height: 46,
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+       
