@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#000000">
+<title>Blackstream</title>
+
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #0f0f0f;
+  color: white;
+}
+
+button {
+  border: none;
+  background: none;
+  color: white;
+  cursor: pointer;
+}
+
+/* HEADER */
+.header {
+  height: 60px;
+  background: #0f0f0f;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  gap: 14px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  border-bottom: 1px solid #222;
+}
+
+.logo {
+  font-size: 21px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.logo span {
+  color: #ff0033;
+}
+
+.search {
+  flex: 1;
+  display: flex;
+  height: 40px;
+}
+
+.search input {
+  width: 100%;
+  background: #181818;
+  border: 1px solid #333;
+  border-radius: 22px 0 0 22px;
+  padding: 0 16px;
+  color: white;
+  outline: none;
+}
+
+.search button {
+  width: 48px;
+  background: #252525;
+  border-radius: 0 22px 22px 0;
+  font-size: 18px;
+}
+
+.avatar {
+  width: 34px;
+  height: 34px;
+  background: #ff0033;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+}
+
+/* CATEGORY */
+.categories {
+  display: flex;
+  gap: 9px;
+  padding: 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: #0f0f0f;
+}
+
+.categories::-webkit-scrollbar {
+  display: none;
+}
+
+.category {
+  background: #272727;
+  padding: 9px 15px;
+  border-radius: 20px;
+  white-space: nowrap;
+  font-size: 14px;
+}
+
+.category.active {
+  background: white;
+  color: black;
+}
+
+/* VIDEO GRID */
+.container {
+  padding-bottom: 80px;
+}
+
+.video {
+  margin-bottom: 22px;
+}
+
+.thumbnail {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #222;
+  position: relative;
+  overflow: hidden;
+}
+
+.thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.duration {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  background: rgba(0,0,0,.85);
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.info {
+  display: flex;
+  padding: 10px 12px 0;
+  gap: 10px;
+}
+
+.channel {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  border-radius: 50%;
+  background: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.title {
+  font-size: 16px;
+  line-height: 1.35;
+  font-weight: 600;
+}
+
+.meta {
+  color: #aaa;
+  font-size: 13px;
+  margin-top: 5px;
+}
+
+/* BOTTOM NAV */
+.bottom {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 65px;
+  background: #0f0f0f;
+  border-top: 1px solid #292929;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 30;
+}
+
+.nav-item {
+  color: #aaa;
+  text-align: center;
+  font-size: 11px;
+}
+
+.nav-item div {
+  font-size: 22px;
+  margin-bottom: 3px;
+}
+
+.nav-item.active {
+  color: white;
+}
+
+/* CREATE BUTTON */
+.create {
+  position: fixed;
+  right: 18px;
+  bottom: 82px;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: #ff0033;
+  font-size: 28px;
+  z-index: 25;
+  box-shadow: 0 5px 20px rgba(255,0,50,.35);
+}
+
+/* DESKTOP */
+@media (min-width: 700px) {
+  .video-list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+    padding: 20px;
+  }
+
+  .video {
+    margin-bottom: 0;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header class="header">
+
+  <div class="logo">
+    BLACK<span>STREAM</span>
+  </div>
+
+  <div class="search">
+    <input id="searchInput" type="text" placeholder="Search videos...">
+    <button onclick="searchVideos()">🔍</button>
+  </div>
+
+  <div class="avatar">A</div>
+
+</header>
+
+<div class="categories">
+  <button class="category active" onclick="filterVideos('All', this)">All</button>
+  <button class="category" onclick="filterVideos('Music', this)">Music</button>
+  <button class="category" onclick="filterVideos('Gaming', this)">Gaming</button>
+  <button class="category" onclick="filterVideos('News', this)">News</button>
+  <button class="category" onclick="filterVideos('Movies', this)">Movies</button>
+  <button class="category" onclick="filterVideos('Sports', this)">Sports</button>
+  <button class="category" onclick="filterVideos('Tech', this)">Tech</button>
+</div>
+
+<main class="container">
+  <div class="video-list" id="videoList"></div>
+</main>
+
+<button class="create" onclick="uploadVideo()">+</button>
+
+<nav class="bottom">
+
+  <button class="nav-item active" onclick="home()">
+    <div>⌂</div>
+    Home
+  </button>
+
+  <button class="nav-item">
+    <div>▶</div>
+    Shorts
+  </button>
+
+  <button class="nav-item" onclick="uploadVideo()">
+    <div>⊕</div>
+    Create
+  </button>
+
+  <button class="nav-item">
+    <div>▣</div>
+    Subscriptions
+  </button>
+
+  <button class="nav-item">
+    <div>◉</div>
+    You
+  </button>
+
+</nav>
+
+<script>
+
+const videos = [
+
+  {
+    title: "Welcome to Blackstream 🚀",
+    channel: "Blackstream",
+    views: "1.2K views",
+    time: "2 hours ago",
+    duration: "3:21",
+    category: "All",
+    image: "https://picsum.photos/800/450?random=10"
+  },
+
+  {
+    title: "Amazing Gaming Moments",
+    channel: "Gaming Zone",
+    views: "25K views",
+    time: "5 hours ago",
+    duration: "10:45",
+    category: "Gaming",
+    image: "https://picsum.photos/800/450?random=11"
+  },
+
+  {
+    title: "Top Music Hits 2026",
+    channel: "Music World",
+    views: "142K views",
+    time: "1 day ago",
+    duration: "4:18",
+    category: "Music",
+    image: "https://picsum.photos/800/450?random=12"
+  },
+
+  {
+    title: "Latest Technology You Need To Know",
+    channel: "Tech Daily",
+    views: "18K views",
+    time: "1 day ago",
+    duration: "8:52",
+    category: "Tech",
+    image: "https://picsum.photos/800/450?random=13"
+  },
+
+  {
+    title: "Football Best Moments",
+    channel: "Sports Hub",
+    views: "89K views",
+    time: "2 days ago",
+    duration: "6:32",
+    category: "Sports",
+    image: "https://picsum.photos/800/450?random=14"
+  },
+
+  {
+    title: "Movie Trailer - New Release",
+    channel: "Movie Central",
+    views: "450K views",
+    time: "3 days ago",
+    duration: "2:41",
+    category: "Movies",
+    image: "https://picsum.photos/800/450?random=15"
+  },
+
+  {
+    title: "Breaking News Today",
+    channel: "News 24",
+    views: "32K views",
+    time: "4 hours ago",
+    duration: "5:20",
+    category: "News",
+    image: "https://picsum.photos/800/450?random=16"
+  },
+
+  {
+    title: "How To Build Your First App",
+    channel: "Code Master",
+    views: "12K views",
+    time: "4 days ago",
+    duration: "15:10",
+    category: "Tech",
+    image: "https://picsum.photos/800/450?random=17"
+  }
+
+];
+
+let currentVideos = videos;
+
+function renderVideos(list) {
+
+  const container = document.getElementById("videoList");
+
+  container.innerHTML = "";
+
+  if (list.length === 0) {
+    container.innerHTML =
+      "<p style='padding:30px;color:#aaa;text-align:center;'>No videos found.</p>";
+    return;
+  }
+
+  list.forEach(video => {
+
+    const item = document.createElement("article");
+
+    item.className = "video";
+
+    item.innerHTML = `
+
+      <div class="thumbnail" onclick="openVideo('${video.title}')">
+
+        <img src="${video.image}" alt="${video.title}">
+
+        <span class="duration">${video.duration}</span>
+
+      </div>
+
+      <div class="info">
+
+        <div class="channel">
+          ${video.channel.charAt(0)}
+        </div>
+
+        <div>
+
+          <div class="title">
+            ${video.title}
+          </div>
+
+          <div class="meta">
+            ${video.channel} • ${video.views} • ${video.time}
+          </div>
+
+        </div>
+
+      </div>
+
+    `;
+
+    container.appendChild(item);
+
+  });
+}
+
+function filterVideos(category, button) {
+
+  document.querySelectorAll(".category")
+    .forEach(b => b.classList.remove("active"));
+
+  button.classList.add("active");
+
+  if (category === "All") {
+    currentVideos = videos;
+  } else {
+    currentVideos = videos.filter(v => v.category === category);
+  }
+
+  renderVideos(currentVideos);
+}
+
+function searchVideos() {
+
+  const query =
+    document.getElementById("searchInput")
+    .value
+    .toLowerCase()
+    .trim();
+
+  if (!query) {
+    renderVideos(videos);
+    return;
+  }
+
+  const results = videos.filter(v =>
+    v.title.toLowerCase().includes(query) ||
+    v.channel.toLowerCase().includes(query)
+  );
+
+  renderVideos(results);
+}
+
+function openVideo(title) {
+
+  alert(
+    "▶ BLACKSTREAM\n\n" +
+    title +
+    "\n\nVideo player will be added in the next version."
+  );
+
+}
+
+function uploadVideo() {
+
+  alert(
+    "CREATE VIDEO\n\n" +
+    "Upload system will be added next.\n\n" +
+    "You will be able to select a video, add title, thumbnail and publish it."
+  );
+
+}
+
+function home() {
+  renderVideos(videos);
+}
+
+document
+  .getElementById("searchInput")
+  .addEventListener("keypress", function(e) {
+
+    if (e.key === "Enter") {
+      searchVideos();
+    }
+
+  });
+
+renderVideos(videos);
+
+</script>
+
+</body>
+  </html>
